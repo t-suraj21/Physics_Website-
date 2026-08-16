@@ -70,25 +70,6 @@ Physics Website/
 ### 1. Configuration Setup
 
 #### Backend Environment Variables
-Create a file named `.env` in the `backend/` directory:
-```env
-PORT=5001
-MONGODB_URI=mongodb://127.0.0.1:27017/physics-academy
-JWT_SECRET=your_jwt_signing_key_here
-ADMIN_SECRET_KEY=your_teacher_registration_passphrase_here
-NODE_ENV=development
-```
-> [!IMPORTANT]
-> Keep the `JWT_SECRET` and `ADMIN_SECRET_KEY` secure. Never expose production values in repository code.
-
-#### Frontend Environment Variables
-Create a file named `.env` in the `frontend/` directory:
-```env
-VITE_API_URL=http://localhost:5001/api
-PORT=8001
-```
-
----
 
 ### 2. Installation & Running
 
