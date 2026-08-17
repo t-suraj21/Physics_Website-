@@ -4,9 +4,11 @@ const videoController = require('../controllers/videoController');
 const auth = require('../middleware/auth');
 const authorize = require('../middleware/role');
 
-router.get('/', videoController.getAllVideos);
-router.get('/chapter/:chapterId', videoController.getVideosByChapter);
-router.post('/', auth, authorize('admin'), videoController.addVideo);
+router.get('/', auth, videoController.getAllVideos);
+const { validateBody } = require('../middleware/validator');
+
+router.get('/chapter/:chapterId', auth, videoController.getVideosByChapter);
+router.post('/', auth, authorize('admin'), validateBody(['title', 'chapter', 'youtubeUrl']), videoController.addVideo);
 router.put('/:id', auth, authorize('admin'), videoController.updateVideo);
 router.delete('/:id', auth, authorize('admin'), videoController.deleteVideo);
 

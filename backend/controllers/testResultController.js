@@ -12,6 +12,10 @@ exports.submitTestResult = async (req, res, next) => {
       return res.status(404).json({ message: 'Test not found' });
     }
 
+    if (!answers || !Array.isArray(answers)) {
+      return res.status(400).json({ message: 'Invalid test submission: answers must be an array' });
+    }
+
     if (!test.isActive) {
       return res.status(400).json({ message: 'This test is no longer active' });
     }

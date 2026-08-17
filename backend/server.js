@@ -1,4 +1,13 @@
 require('dotenv').config();
+
+// Ensure critical environment variables are set
+const requiredEnv = ['MONGODB_URI', 'JWT_SECRET', 'ADMIN_SECRET_KEY'];
+requiredEnv.forEach(envVar => {
+  if (!process.env[envVar]) {
+    console.error(`Fatal Startup Error: Environment variable ${envVar} is missing.`);
+    process.exit(1);
+  }
+});
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
@@ -40,6 +49,47 @@ const runSeeder = async () => {
 
 app.use(cors());
 app.use(express.json());
+
+// Prevent NoSQL Injection by sanitizing request bodies, query parameters, and route parameters
+const sanitizeNoSQL = (obj) => {
+  if (obj && typeof obj === 'object') {
+    for (const key in obj) {
+      if (key.startsWith('$') || key.includes('.')) {
+        delete obj[key];
+      } else if (typeof obj[key] === 'object') {
+        sanitizeNoSQL(obj[key]);
+      }
+    }
+  }
+};
+app.use((req, res, next) => {
+  if (req.body) sanitizeNoSQL(req.body);
+  if (req.query) sanitizeNoSQL(req.query);
+  if (req.params) sanitizeNoSQL(req.params);
+  next();
+});
+
+// Configure Rate Limiters
+const rateLimit = require('express-rate-limit');
+
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 150,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: 'Too many requests from this IP, please try again after 15 minutes.' }
+});
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 20, // 20 attempts
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: 'Too many login or registration attempts, please try again after 15 minutes.' }
+});
+
+app.use('/api/auth', authLimiter);
+app.use('/api', apiLimiter);
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 

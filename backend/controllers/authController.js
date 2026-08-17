@@ -3,7 +3,10 @@ const jwt = require('jsonwebtoken');
 const seedChapters = require('../utils/seedChapters');
 
 const generateToken = (id, role) => {
-  return jwt.sign({ id, role }, process.env.JWT_SECRET || 'fallback_secret', {
+  if (!process.env.JWT_SECRET) {
+    throw new Error('JWT_SECRET environment variable is missing');
+  }
+  return jwt.sign({ id, role }, process.env.JWT_SECRET, {
     expiresIn: '7d',
   });
 };
@@ -22,6 +25,19 @@ exports.register = async (req, res, next) => {
   try {
     const { name, email, password, phone, class: className } = req.body;
     
+    if (!name || !email || !password) {
+      return res.status(400).json({ message: 'Please provide name, email, and password' });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({ message: 'Password must be at least 6 characters long' });
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ message: 'Please provide a valid email address' });
+    }
+
     const userExists = await User.findOne({ email });
     if (userExists) {
       return res.status(400).json({ message: 'User already exists' });
@@ -58,6 +74,24 @@ exports.register = async (req, res, next) => {
 exports.adminRegister = async (req, res, next) => {
   try {
     const { name, email, password } = req.body;
+    
+    if (!name || !email || !password) {
+      return res.status(400).json({ message: 'Please provide name, email, and password' });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({ message: 'Password must be at least 6 characters long' });
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ message: 'Please provide a valid email address' });
+    }
+
+    const adminSecret = req.headers['x-admin-secret-key'] || req.body.adminSecretKey;
+    if (!process.env.ADMIN_SECRET_KEY || adminSecret !== process.env.ADMIN_SECRET_KEY) {
+      return res.status(403).json({ message: 'Forbidden: Invalid or missing Admin Secret Key' });
+    }
 
     const userExists = await User.findOne({ email });
     if (userExists) {
@@ -94,6 +128,10 @@ exports.adminRegister = async (req, res, next) => {
 exports.login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Please provide email and password' });
+    }
 
     const user = await User.findOne({ email });
     if (!user) {

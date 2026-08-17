@@ -5,10 +5,12 @@ const testResultController = require('../controllers/testResultController');
 const auth = require('../middleware/auth');
 const authorize = require('../middleware/role');
 
-router.get('/', testController.getTests);
-router.get('/chapter/:chapterId', testController.getTestsByChapter);
+router.get('/', auth, testController.getTests);
+router.get('/chapter/:chapterId', auth, testController.getTestsByChapter);
+const { validateBody } = require('../middleware/validator');
+
 router.get('/:id', auth, testController.getTestById);
-router.post('/', auth, authorize('admin'), testController.createTest);
+router.post('/', auth, authorize('admin'), validateBody(['title', 'chapter', 'duration', 'totalMarks', 'questions']), testController.createTest);
 router.put('/:id', auth, authorize('admin'), testController.updateTest);
 router.delete('/:id', auth, authorize('admin'), testController.deleteTest);
 

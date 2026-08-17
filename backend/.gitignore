@@ -1,0 +1,16 @@
+# Node modules
+node_modules/
+
+# Environment files
+.env
+.env.production
+.env.development
+.env.local
+.env.*.local
+
+# Logs
+*.log
+npm-debug.log*
+
+# Uploads (local development uploads should not be committed)
+uploads/

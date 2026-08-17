@@ -5,8 +5,10 @@ const auth = require('../middleware/auth');
 const authorize = require('../middleware/role');
 
 router.get('/', auth, chapterController.getChapters);
+const { validateBody } = require('../middleware/validator');
+
 router.get('/:id', auth, chapterController.getChapterById);
-router.post('/', auth, authorize('admin'), chapterController.createChapter);
+router.post('/', auth, authorize('admin'), validateBody(['title', 'order']), chapterController.createChapter);
 router.put('/:id', auth, authorize('admin'), chapterController.updateChapter);
 router.delete('/:id', auth, authorize('admin'), chapterController.deleteChapter);
 

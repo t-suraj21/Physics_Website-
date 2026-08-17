@@ -1,4 +1,6 @@
 const Assignment = require('../models/Assignment');
+const fs = require('fs');
+const path = require('path');
 
 const getFileUrl = (req, file) => {
   if (!file) return '';
@@ -100,8 +102,34 @@ exports.deleteAssignment = async (req, res, next) => {
       return res.status(404).json({ message: 'Assignment not found' });
     }
 
-    await Assignment.findByIdAndDelete(req.params.id);
+    const deleteLocalFile = (fileUrl) => {
+      if (fileUrl && !fileUrl.includes('cloudinary.com')) {
+        try {
+          const parts = fileUrl.split('/uploads/');
+          if (parts.length > 1) {
+            const filename = parts[1];
+            const filepath = path.join(__dirname, '../uploads', filename);
+            if (fs.existsSync(filepath)) {
+              fs.unlinkSync(filepath);
+            }
+          }
+        } catch (err) {
+          console.error('Failed to delete local file:', err);
+        }
+      }
+    };
+
+    // Delete assignment worksheet file
+    deleteLocalFile(assignment.resourceUrl);
+
+    // Delete all student submission files associated with this assignment
     const Submission = require('../models/Submission');
+    const submissions = await Submission.find({ assignment: req.params.id });
+    submissions.forEach(sub => {
+      deleteLocalFile(sub.fileUrl);
+    });
+
+    await Assignment.findByIdAndDelete(req.params.id);
     await Submission.deleteMany({ assignment: req.params.id });
 
     res.json({ message: 'Assignment and associated submissions deleted successfully' });

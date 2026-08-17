@@ -6,7 +6,7 @@ const submissionSchema = new mongoose.Schema({
   fileUrl: { type: String, required: true },
   fileName: { type: String, required: true },
   submittedAt: { type: Date, default: Date.now },
-  marks: { type: Number, default: null },
+  marks: { type: Number, default: null, min: 0 },
   feedback: { type: String, default: '' },
   status: { type: String, enum: ['submitted', 'graded'], default: 'submitted' },
   gradedAt: { type: Date }

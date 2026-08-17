@@ -1,4 +1,6 @@
 const Note = require('../models/Note');
+const fs = require('fs');
+const path = require('path');
 
 const getFileUrl = (req, file) => {
   if (!file) return '';
@@ -51,6 +53,22 @@ exports.deleteNote = async (req, res, next) => {
     const note = await Note.findById(req.params.id);
     if (!note) {
       return res.status(404).json({ message: 'Note not found' });
+    }
+
+    // Delete local file if it exists
+    if (note.fileUrl && !note.fileUrl.includes('cloudinary.com')) {
+      try {
+        const parts = note.fileUrl.split('/uploads/');
+        if (parts.length > 1) {
+          const filename = parts[1];
+          const filepath = path.join(__dirname, '../uploads', filename);
+          if (fs.existsSync(filepath)) {
+            fs.unlinkSync(filepath);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to delete local file on note deletion:', err);
+      }
     }
 
     await Note.findByIdAndDelete(req.params.id);

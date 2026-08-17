@@ -5,10 +5,12 @@ const auth = require('../middleware/auth');
 const authorize = require('../middleware/role');
 const { uploadFile } = require('../middleware/upload');
 
-router.get('/', assignmentController.getAssignments);
-router.get('/chapter/:chapterId', assignmentController.getAssignmentsByChapter);
-router.get('/:id', assignmentController.getAssignmentById);
-router.post('/', auth, authorize('admin'), uploadFile.single('file'), assignmentController.createAssignment);
+router.get('/', auth, assignmentController.getAssignments);
+router.get('/chapter/:chapterId', auth, assignmentController.getAssignmentsByChapter);
+const { validateBody } = require('../middleware/validator');
+
+router.get('/:id', auth, assignmentController.getAssignmentById);
+router.post('/', auth, authorize('admin'), uploadFile.single('file'), validateBody(['title', 'chapter', 'dueDate', 'totalMarks']), assignmentController.createAssignment);
 router.put('/:id', auth, authorize('admin'), uploadFile.single('file'), assignmentController.updateAssignment);
 router.delete('/:id', auth, authorize('admin'), assignmentController.deleteAssignment);
 

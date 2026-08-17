@@ -5,6 +5,37 @@ const fs = require('fs');
 let uploadFile;
 let uploadAvatar;
 
+const ALLOWED_AVATAR_MIMETYPES = ['image/jpeg', 'image/png', 'image/jpg'];
+const ALLOWED_FILE_MIMETYPES = [
+  'image/jpeg',
+  'image/png',
+  'image/jpg',
+  'application/pdf',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'text/plain',
+  'application/zip',
+  'application/x-zip-compressed'
+];
+
+const avatarFilter = (req, file, cb) => {
+  if (ALLOWED_AVATAR_MIMETYPES.includes(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(new Error('Only .jpg, .jpeg, and .png formats are allowed for avatars!'), false);
+  }
+};
+
+const fileFilter = (req, file, cb) => {
+  const ext = path.extname(file.originalname).toLowerCase();
+  const allowedExtensions = ['.pdf', '.doc', '.docx', '.jpg', '.jpeg', '.png', '.txt', '.zip'];
+  if (ALLOWED_FILE_MIMETYPES.includes(file.mimetype) && allowedExtensions.includes(ext)) {
+    cb(null, true);
+  } else {
+    cb(new Error('Only documents (.pdf, .doc, .docx, .txt, .zip) and images (.jpg, .jpeg, .png) are allowed!'), false);
+  }
+};
+
 const isCloudinaryConfigured = 
   process.env.CLOUDINARY_CLOUD_NAME && 
   process.env.CLOUDINARY_API_KEY && 
@@ -36,8 +67,16 @@ if (isCloudinaryConfigured) {
       },
     });
 
-    uploadFile = multer({ storage: fileStorage });
-    uploadAvatar = multer({ storage: avatarStorage });
+    uploadFile = multer({ 
+      storage: fileStorage,
+      fileFilter: fileFilter,
+      limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit
+    });
+    uploadAvatar = multer({ 
+      storage: avatarStorage,
+      fileFilter: avatarFilter,
+      limits: { fileSize: 2 * 1024 * 1024 } // 2MB limit
+    });
     console.log('Multer configured to use Cloudinary storage.');
   } catch (err) {
     console.error('Error configuring Cloudinary Storage, falling back to Local Storage:', err);
@@ -63,8 +102,16 @@ function setupLocalStorage() {
     },
   });
 
-  uploadFile = multer({ storage });
-  uploadAvatar = multer({ storage });
+  uploadFile = multer({ 
+    storage,
+    fileFilter: fileFilter,
+    limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit
+  });
+  uploadAvatar = multer({ 
+    storage,
+    fileFilter: avatarFilter,
+    limits: { fileSize: 2 * 1024 * 1024 } // 2MB limit
+  });
 }
 
 module.exports = {

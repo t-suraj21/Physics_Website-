@@ -4,9 +4,11 @@ const authController = require('../controllers/authController');
 const auth = require('../middleware/auth');
 const { uploadAvatar } = require('../middleware/upload');
 
-router.post('/register', authController.register);
-router.post('/admin/register', authController.adminRegister);
-router.post('/login', authController.login);
+const { validateBody } = require('../middleware/validator');
+
+router.post('/register', validateBody(['name', 'email', 'password']), authController.register);
+router.post('/admin/register', validateBody(['name', 'email', 'password']), authController.adminRegister);
+router.post('/login', validateBody(['email', 'password']), authController.login);
 router.get('/me', auth, authController.getMe);
 router.get('/teacher', authController.getTeacherProfile);
 router.put('/profile', auth, authController.updateProfile);
