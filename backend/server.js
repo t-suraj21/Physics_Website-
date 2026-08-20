@@ -47,7 +47,17 @@ const runSeeder = async () => {
 };
 // runSeeder();
 
-app.use(cors());
+app.use(cors({
+  origin: [
+    'https://physics-website-one.vercel.app',
+    'http://localhost:5173',
+    'http://localhost:3000',
+    'http://localhost:8001'
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json());
 
 // Prevent NoSQL Injection by sanitizing request bodies, query parameters, and route parameters
